@@ -3,7 +3,7 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Auth check
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     const container = document.getElementById('upload-form')?.parentElement || document.body;
     container.innerHTML = `
@@ -57,17 +57,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const filePath = `${user.id}/${Date.now()}_${file.name}`;
-          let { error: uploadError } = await supabase.storage.from('project-media').upload(filePath, file);
+          let { error: uploadError } = await supabaseClient.storage.from('project-media').upload(filePath, file);
           if (uploadError) {
             statusDiv.textContent = 'Upload failed: ' + uploadError.message;
             return;
           }
-          const { data } = supabase.storage.from('project-media').getPublicUrl(filePath);
+          const { data } = supabaseClient.storage.from('project-media').getPublicUrl(filePath);
           mediaUrls.push(data.publicUrl);
         }
         // Fetch username from profiles table
         let creatorName = user.email;
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await supabaseClient
           .from('profiles')
           .select('username')
           .eq('id', user.id)
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
         // Save project metadata to Supabase Database
-        const { error: dbError } = await supabase.from('projects').insert([projectData]);
+        const { error: dbError } = await supabaseClient.from('projects').insert([projectData]);
         if (dbError) {
           statusDiv.textContent = 'Database error: ' + dbError.message;
           return;

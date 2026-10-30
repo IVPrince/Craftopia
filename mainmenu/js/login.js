@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       try {
-        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
           loginError.textContent = error.message;
         } else if (!data.user.email_confirmed_at) {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     logoDiv.style.cursor = 'pointer';
     logoDiv.addEventListener('click', async (e) => {
       e.preventDefault();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (user && user.email_confirmed_at) {
         window.location.href = 'index.html';
       } else {

@@ -9,16 +9,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Cache user info
   let cachedUser = null;
-  if (window.supabase) {
-    const { data: { user } } = await supabase.auth.getUser();
+  if (typeof supabaseClient !== "undefined") {
+    const { data: { user } } = await supabaseClient.auth.getUser();
     cachedUser = user;
   }
 
   // Always show avatar and menu for any logged-in user
-  if (window.supabase && avatar) {
+  if (typeof supabaseClient !== "undefined" && avatar) {
     if (cachedUser) {
       // Fetch avatar_url from profiles
-      const { data: profile } = await supabase
+      const { data: profile } = await supabaseClient
         .from('profiles')
         .select('avatar_url')
         .eq('id', cachedUser.id)
@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     logoutBtn.addEventListener('click', function(e) {
       e.preventDefault();
       window.location.href = 'login.html';
-      if (window.supabase && supabase.auth) {
-        supabase.auth.signOut();
+      if (typeof supabaseClient !== "undefined" && supabaseClient.auth) {
+        supabaseClient.auth.signOut();
       }
     });
   }

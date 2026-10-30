@@ -62,6 +62,7 @@
     <span id="copyright"></span>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/utils.js"></script>
   <script src="js/supabase.js"></script>
   <script>
     // Dynamic copyright year
@@ -72,7 +73,7 @@
 
     // Logout button
     document.getElementById('logout-btn').onclick = async () => {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       window.location.href = 'index.html';
     };
 
@@ -87,14 +88,14 @@
 
     // Load current user
     async function getCurrentUser() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       currentUser = user;
     }
 
     // Load project details
     async function loadProject() {
       await getCurrentUser();
-      const { data: project, error } = await supabase
+      const { data: project, error } = await supabaseClient
         .from('projects')
         .select('*')
         .eq('id', projectId)
@@ -111,7 +112,7 @@
       // Fetch creator's avatar_url from profiles
       let creatorAvatar = 'assets/logo.png';
       if (project.user_id) {
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseClient
           .from('profiles')
           .select('avatar_url')
           .eq('id', project.user_id)
@@ -135,12 +136,12 @@
       const isOwner = currentUser && project.user_id === currentUser.id;
       card.innerHTML = `
         ${carouselHtml}
-        <div class="project-title">${project.title}</div>
+        <div class="project-title">${esc(project.title)}</div>
         <div class="creator-detail">
           <img src="${creatorAvatar}" alt="Creator Avatar">
-          <span class="creator-name">${project.creator_name || 'Anonymous'}</span>
+          <span class="creator-name">${esc(project.creator_name || 'Anonymous')}</span>
         </div>
-        <p class="project-detail-desc">${project.description}</p>
+        <p class="project-detail-desc">${esc(project.description)}</p>
         <div class="project-detail-meta">
           <span class="likes" id="likes-count">❤️ ${project.likes_count || 0}</span>
           <span class="comments" id="comments-count">💬 ${project.comments_count || 0}</span>
@@ -214,7 +215,7 @@
         // Delete
         card.querySelector('#delete-project-btn').onclick = async () => {
           if (!confirm('Are you sure you want to delete this project? This cannot be undone.')) return;
-          const { error } = await supabase.from('projects').delete().eq('id', projectId);
+          const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
           if (error) {
             alert('Failed to delete project: ' + error.message);
           } else {
@@ -280,12 +281,12 @@
             const file = addImagesInput.files[i];
             const fileExt = file.name.split('.').pop();
             const filePath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
-            let { error: uploadError } = await supabase.storage.from('project-media').upload(filePath, file);
+            let { error: uploadError } = await supabaseClient.storage.from('project-media').upload(filePath, file);
             if (uploadError) {
               statusDiv.textContent = 'Upload failed: ' + uploadError.message;
               return;
             }
-            const { data } = supabase.storage.from('project-media').getPublicUrl(filePath);
+            const { data } = supabaseClient.storage.from('project-media').getPublicUrl(filePath);
             editMediaUrls.push(data.publicUrl);
           }
           renderEditImages();
@@ -307,7 +308,7 @@
           };
           console.log('Project update payload:', updates);
           try {
-            const { data, error } = await supabase.from('projects').update(updates).eq('id', projectId).select();
+            const { data, error } = await supabaseClient.from('projects').update(updates).eq('id', projectId).select();
             console.log('Project update result:', { data, error });
             if (error) {
               statusDiv.textContent = 'Failed to save: ' + error.message;
@@ -335,7 +336,7 @@
     async function setupLikeFavorite(project) {
       if (!currentUser) return;
       // Check if liked
-      const { data: likeData } = await supabase
+      const { data: likeData } = await supabaseClient
         .from('project_likes')
         .select('*')
         .eq('project_id', project.id)
@@ -347,15 +348,15 @@
       document.getElementById('like-btn').onclick = async () => {
         if (!currentUser) return;
         if (liked) {
-          await supabase.from('project_likes').delete().eq('project_id', project.id).eq('user_id', currentUser.id);
+          await supabaseClient.from('project_likes').delete().eq('project_id', project.id).eq('user_id', currentUser.id);
         } else {
-          await supabase.from('project_likes').insert([{ project_id: project.id, user_id: currentUser.id }]);
+          await supabaseClient.from('project_likes').insert([{ project_id: project.id, user_id: currentUser.id }]);
         }
         await updateLikesCount(project.id);
         await setupLikeFavorite(project);
       };
       // Check if favorited
-      const { data: favData } = await supabase
+      const { data: favData } = await supabaseClient
         .from('project_favorites')
         .select('*')
         .eq('project_id', project.id)
@@ -367,25 +368,25 @@
       document.getElementById('favorite-btn').onclick = async () => {
         if (!currentUser) return;
         if (favorited) {
-          await supabase.from('project_favorites').delete().eq('project_id', project.id).eq('user_id', currentUser.id);
+          await supabaseClient.from('project_favorites').delete().eq('project_id', project.id).eq('user_id', currentUser.id);
         } else {
-          await supabase.from('project_favorites').insert([{ project_id: project.id, user_id: currentUser.id }]);
+          await supabaseClient.from('project_favorites').insert([{ project_id: project.id, user_id: currentUser.id }]);
         }
         await setupLikeFavorite(project);
       };
     }
     async function updateLikesCount(projectId) {
-      const { count } = await supabase
+      const { count } = await supabaseClient
         .from('project_likes')
         .select('*', { count: 'exact', head: true })
         .eq('project_id', projectId);
       document.getElementById('likes-count').textContent = `❤️ ${count || 0}`;
-      await supabase.from('projects').update({ likes_count: count || 0 }).eq('id', projectId);
+      await supabaseClient.from('projects').update({ likes_count: count || 0 }).eq('id', projectId);
     }
 
     // Comments logic
     async function loadComments() {
-      const { data: comments } = await supabase
+      const { data: comments } = await supabaseClient
         .from('project_comments')
         .select('*')
         .eq('project_id', projectId)
@@ -397,7 +398,7 @@
         const userIds = [...new Set(comments.map(c => c.user_id).filter(Boolean))];
         let userMap = {};
         if (userIds.length) {
-          const { data: profiles } = await supabase
+          const { data: profiles } = await supabaseClient
             .from('profiles')
             .select('id, username, avatar_url')
             .in('id', userIds);
@@ -419,10 +420,10 @@
             <div style="display:flex;align-items:center;gap:12px;">
               <a href="user.html?id=${c.user_id}" style="display:inline-block;"><img src="${avatar}" alt="avatar" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #f3d6e3;"></a>
               <div style="flex:1;">
-                <a href="user.html?id=${c.user_id}" style="font-weight:700;color:#e75480;font-size:1.08em;text-decoration:none;">${username}</a>
+                <a href="user.html?id=${c.user_id}" style="font-weight:700;color:#e75480;font-size:1.08em;text-decoration:none;">${esc(username)}</a>
                 <span class="comment-date" style="color:#b48a99;font-size:0.98em;margin-left:8px;">${displayTime}</span>
                 ${c.updated_at && c.updated_at !== c.created_at ? '<span class="comment-edited" style="color:#b48a99;font-size:0.95em;margin-left:6px;">(edited)</span>' : ''}
-                <div class="comment-content" style="margin:2px 0 0 0;color:#333;font-size:1.08em;word-break:break-word;">${c.content}</div>
+                <div class="comment-content" style="margin:2px 0 0 0;color:#333;font-size:1.08em;word-break:break-word;">${esc(c.content)}</div>
                 ${currentUser && c.user_id === currentUser.id ? `
                   <div class="comment-actions" style="margin-top:4px;">
                     <button class="edit-comment-btn" style="background:#f3d6e3;color:#e75480;">Edit</button>
@@ -444,11 +445,11 @@
             // Hide edit/delete buttons while editing
             li.querySelectorAll('.edit-comment-btn, .delete-comment-btn').forEach(b => b.style.display = 'none');
             // Replace content with input
-            contentSpan.innerHTML = `<input type='text' value="${originalContent}" class='edit-comment-input' style='width:60%;padding:4px 8px;border-radius:4px;border:1px solid #f3d6e3;'> <button class='save-edit-btn' style='background:#e75480;color:#fff;margin-left:6px;'>Save</button> <button class='cancel-edit-btn' style='background:#f3d6e3;color:#e75480;margin-left:4px;'>Cancel</button>`;
+            contentSpan.innerHTML = `<input type='text' value="${esc(originalContent)}" class='edit-comment-input' style='width:60%;padding:4px 8px;border-radius:4px;border:1px solid #f3d6e3;'> <button class='save-edit-btn' style='background:#e75480;color:#fff;margin-left:6px;'>Save</button> <button class='cancel-edit-btn' style='background:#f3d6e3;color:#e75480;margin-left:4px;'>Cancel</button>`;
             li.querySelector('.save-edit-btn').onclick = async () => {
               const newContent = li.querySelector('.edit-comment-input').value.trim();
               if (!newContent) return alert('Comment cannot be empty.');
-              await supabase.from('project_comments').update({ content: newContent, updated_at: new Date().toISOString() }).eq('id', commentId);
+              await supabaseClient.from('project_comments').update({ content: newContent, updated_at: new Date().toISOString() }).eq('id', commentId);
               await loadComments();
             };
             li.querySelector('.cancel-edit-btn').onclick = () => {
@@ -463,7 +464,7 @@
             if (!confirm('Are you sure you want to delete this comment?')) return;
             const li = this.closest('li');
             const commentId = li.getAttribute('data-comment-id');
-            await supabase.from('project_comments').delete().eq('id', commentId);
+            await supabaseClient.from('project_comments').delete().eq('id', commentId);
             await loadComments();
           };
         });
@@ -478,13 +479,13 @@
       form.onsubmit = async (e) => {
         e.preventDefault();
         if (!currentUser) return;
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseClient
           .from('profiles')
           .select('username')
           .eq('id', currentUser.id)
           .single();
         // NOTE: Requires DB migration: ALTER TABLE project_comments ADD COLUMN local_created_at timestamptz;
-        await supabase.from('project_comments').insert([
+        await supabaseClient.from('project_comments').insert([
           {
             project_id: projectId,
             user_id: currentUser.id,

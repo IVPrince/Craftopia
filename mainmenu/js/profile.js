@@ -22,14 +22,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (projectsLink) projectsLink.style.display = '';
 
   // Wait for Supabase session restoration
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   await updateNav(); // Now update nav after session is ready
 
   // Listen for auth state changes
-  supabase.auth.onAuthStateChange(updateNav);
+  supabaseClient.auth.onAuthStateChange(updateNav);
 
   async function updateNav() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (user && user.email_confirmed_at) {
       if (loginLink) loginLink.style.display = 'none';
       if (signupLink) signupLink.style.display = 'none';
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (logoutLink) {
       logoutLink.onclick = async (e) => {
         e.preventDefault();
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         window.location.href = 'login.html';
       };
     }
@@ -99,14 +99,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Load and display user info
   async function loadProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
     // Fetch avatar_url, username, location, about from profiles table
     let avatarUrl = 'assets/logo.png';
     let username = 'Username';
     let location = '';
     let about = '';
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseClient
       .from('profiles')
       .select('username, avatar_url, location, about')
       .eq('id', user.id)
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const profileInfoCard = document.getElementById('profile-info-card');
     const profileEmptyCard = document.getElementById('profile-empty-card');
     if ((location && location.trim()) || (about && about.trim())) {
-      if (profileLocation) profileLocation.innerHTML = location ? `<span style='font-weight:700;'>Location:</span> <span style='color:#e75480;'>${location}</span>` : '';
+      if (profileLocation) profileLocation.innerHTML = location ? `<span style='font-weight:700;'>Location:</span> <span style='color:#e75480;'>${esc(location)}</span>` : '';
       if (profileAbout) profileAbout.textContent = about ? about : '';
       if (profileInfoCard) profileInfoCard.style.display = '';
       if (profileEmptyCard) profileEmptyCard.style.display = 'none';
@@ -163,9 +163,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     editProfileModal.classList.add('active');
     modalStatus.textContent = '';
     // Load current profile info
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabaseClient.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data: profile } = await supabase
+      const { data: profile } = await supabaseClient
         .from('profiles')
         .select('avatar_url, location, about')
         .eq('id', user.id)
@@ -188,18 +188,18 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Avatar upload in modal
   if (modalAvatarUpload) {
     modalAvatarUpload.onchange = async function() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user || !modalAvatarUpload.files[0]) return;
       modalStatus.textContent = 'Uploading photo...';
       const file = modalAvatarUpload.files[0];
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-      let { error: uploadError } = await supabase.storage.from('profile-pics').upload(filePath, file, { upsert: true });
+      let { error: uploadError } = await supabaseClient.storage.from('profile-pics').upload(filePath, file, { upsert: true });
       if (uploadError) {
         modalStatus.textContent = 'Upload failed: ' + uploadError.message;
         return;
       }
-      const { data } = supabase.storage.from('profile-pics').getPublicUrl(filePath);
+      const { data } = supabaseClient.storage.from('profile-pics').getPublicUrl(filePath);
       modalAvatarUrl = data.publicUrl;
       modalAvatar.src = modalAvatarUrl;
       modalStatus.textContent = 'Photo uploaded!';
@@ -210,11 +210,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (editProfileForm) {
     editProfileForm.onsubmit = async function(e) {
       e.preventDefault();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) return;
       modalStatus.textContent = 'Saving...';
       // Fetch current username to always include it in the update
-      const { data: profile } = await supabase
+      const { data: profile } = await supabaseClient
         .from('profiles')
         .select('username')
         .eq('id', user.id)
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         about: modalAbout.value.trim(),
         username: profile?.username || '' // Always include username
       };
-      const { error } = await supabase.from('profiles').upsert(updates);
+      const { error } = await supabaseClient.from('profiles').upsert(updates);
       if (error) {
         modalStatus.textContent = 'Failed to save: ' + error.message;
         return;
@@ -242,14 +242,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   // --- Username change (Settings tab) ---
   if (saveUsernameBtn && usernameInput) {
     saveUsernameBtn.onclick = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) return;
       const username = usernameInput.value.trim();
       if (!username) {
         settingsStatus.textContent = 'Username cannot be empty.';
         return;
       }
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('profiles')
         .upsert({ id: user.id, username });
       if (error) {
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         settingsStatus.textContent = 'Password must be at least 6 characters.';
         return;
       }
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
       if (error) {
         settingsStatus.textContent = 'Error: ' + error.message;
       } else {
@@ -282,10 +282,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // --- Load Projects and Favorites ---
   async function loadProjectsAndFavorites() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
     // Projects
-    const { data: projects, error: projectsError } = await supabase
+    const { data: projects, error: projectsError } = await supabaseClient
       .from('projects')
       .select('*')
       .eq('user_id', user.id)
@@ -310,8 +310,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         li.innerHTML = `
           <img src="${(mediaUrls && mediaUrls[0]) ? mediaUrls[0] : 'assets/sample1.jpg'}" class="project-thumb" alt="Project Thumbnail">
           <div class="project-info">
-            <div class="project-title">${p.title}</div>
-            <div class="project-meta">${p.category || ''} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
+            <div class="project-title">${esc(p.title)}</div>
+            <div class="project-meta">${esc(p.category || '')} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
           </div>
         `;
         projectsList.appendChild(li);
@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       projectsEmpty.style.display = '';
     }
     // Favorites
-    const { data: favorites, error: favoritesError } = await supabase
+    const { data: favorites, error: favoritesError } = await supabaseClient
       .from('project_favorites')
       .select('project_id')
       .eq('user_id', user.id);
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const favoriteIds = (favorites || []).map(f => f.project_id);
     let favoriteProjects = [];
     if (favoriteIds.length) {
-      const { data: favProjects, error: favProjectsError } = await supabase
+      const { data: favProjects, error: favProjectsError } = await supabaseClient
         .from('projects')
         .select('*')
         .in('id', favoriteIds);
@@ -356,8 +356,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         li.innerHTML = `
           <img src="${(mediaUrls && mediaUrls[0]) ? mediaUrls[0] : 'assets/sample1.jpg'}" class="favorite-thumb" alt="Project Thumbnail">
           <div class="favorite-info">
-            <div class="favorite-title">${p.title}</div>
-            <div class="favorite-meta">${p.category || ''} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
+            <div class="favorite-title">${esc(p.title)}</div>
+            <div class="favorite-meta">${esc(p.category || '')} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
           </div>
         `;
         favoritesList.appendChild(li);
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     logoDiv.style.cursor = 'pointer';
     logoDiv.addEventListener('click', async (e) => {
       e.preventDefault();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (user && user.email_confirmed_at) {
         window.location.href = 'index.html';
       } else {
