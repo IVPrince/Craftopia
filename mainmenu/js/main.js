@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Auth state
   // async function updateNav() {
-  //   const { data: { user } } = await supabase.auth.getUser();
+  //   const { data: { user } } = await supabaseClient.auth.getUser();
   //   if (user && user.email_confirmed_at) {
   //     loginLink.style.display = 'none';
   //     if (signupLink) signupLink.style.display = 'none';
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   //       let signedOut = false;
   //       try {
   //         await Promise.race([
-  //           supabase.auth.signOut().then(() => { signedOut = true; }),
+  //           supabaseClient.auth.signOut().then(() => { signedOut = true; }),
   //           new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
   //         ]);
   //       } catch (err) {
@@ -103,11 +103,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // logoutLink.style.display = 'none';
 
   // Wait for Supabase session restoration
-  // const { data: { session } } = await supabase.auth.getSession();
+  // const { data: { session } } = await supabaseClient.auth.getSession();
   // await updateNav(); // Now update nav after session is ready
 
   // Listen for auth state changes
-  // supabase.auth.onAuthStateChange(updateNav);
+  // supabaseClient.auth.onAuthStateChange(updateNav);
 
   // Auth form submit (guarded)
   if (authForm && authEmail && authPassword && authSubmitBtn && authError) {
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const email = authEmail.value;
       const password = authPassword.value;
       if (isLogin) {
-        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
           authError.textContent = error.message;
         } else if (!data.user.email_confirmed_at) {
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           // updateNav(); // Ensure nav updates after login
         }
       } else {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabaseClient.auth.signUp({ email, password });
         if (error) {
           authError.textContent = error.message;
         } else {
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function fetchProjects() {
     grid.innerHTML = '<div class="loading-indicator" style="grid-column: 1/-1; text-align:center; color:#e75480;"><span class="spinner"></span> Loading projects...</div>';
-    const { data, error } = await supabase.from('projects').select('*').order('id', { ascending: false });
+    const { data, error } = await supabaseClient.from('projects').select('*').order('id', { ascending: false });
     if (error) {
       console.error('Supabase error loading projects:', error);
       grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#d32f2f;">Error loading projects.</p>';
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userIds = [...new Set(allProjects.map(p => p.user_id).filter(Boolean))];
     let avatarMap = {};
     if (userIds.length) {
-      const { data: profiles } = await supabase
+      const { data: profiles } = await supabaseClient
         .from('profiles')
         .select('id, avatar_url')
         .in('id', userIds);
@@ -179,13 +179,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fetch live counts for each project
     await Promise.all(allProjects.map(async (project) => {
       // Likes count
-      const { count: likesCount } = await supabase
+      const { count: likesCount } = await supabaseClient
         .from('project_likes')
         .select('*', { count: 'exact', head: true })
         .eq('project_id', project.id);
       project.likes_count = likesCount || 0;
       // Comments count
-      const { count: commentsCount } = await supabase
+      const { count: commentsCount } = await supabaseClient
         .from('project_comments')
         .select('*', { count: 'exact', head: true })
         .eq('project_id', project.id);
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     logoDiv.style.cursor = 'pointer';
     logoDiv.addEventListener('click', async (e) => {
       e.preventDefault();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabaseClient.auth.getUser();
       if (user && user.email_confirmed_at) {
         window.location.href = 'index.html';
       } else {

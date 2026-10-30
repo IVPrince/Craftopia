@@ -13,14 +13,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Auth check
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     alert('Access denied. Admins only.');
     window.location.href = 'index.html';
     return;
   }
   // Check admin flag in profiles table
-  const { data: profile, error: profileErr } = await supabase
+  const { data: profile, error: profileErr } = await supabaseClient
     .from('profiles')
     .select('is_admin')
     .eq('id', user.id)
@@ -34,13 +34,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Logout
   logoutLink.onclick = async (e) => {
     e.preventDefault();
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     window.location.href = 'login.html';
   };
 
   // Fetch projects
   statusDiv.textContent = 'Loading projects and users...';
-  const { data: projects, error: projErr } = await supabase.from('projects').select('*');
+  const { data: projects, error: projErr } = await supabaseClient.from('projects').select('*');
   if (projErr) {
     statusDiv.textContent = 'Error loading projects.';
     return;
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Fetch users
-  const { data: users, error: userErr } = await supabase.from('users').select('*');
+  const { data: users, error: userErr } = await supabaseClient.from('users').select('*');
   if (usersTable) {
     usersTable.innerHTML = '';
     if (!userErr && users) {

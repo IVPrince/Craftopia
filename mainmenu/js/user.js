@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   // Fetch user profile
-  const { data: profile, error } = await supabase
+  const { data: profile, error } = await supabaseClient
     .from('profiles')
     .select('username,avatar_url,about,location,created_at')
     .eq('id', userId)
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   // Fetch user's projects
-  const { data: projects } = await supabase
+  const { data: projects } = await supabaseClient
     .from('projects')
     .select('*')
     .eq('user_id', userId)
