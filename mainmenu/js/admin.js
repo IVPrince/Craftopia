@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (!Array.isArray(mediaUrls)) mediaUrls = [];
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${p.title}</td><td>${p.category}</td><td>${p.creator_name || p.user_id}</td><td>${mediaUrls.map(url => `<a href='${url}' target='_blank'>Media</a>`).join(', ')}</td>`;
+      tr.innerHTML = `<td>${esc(p.title)}</td><td>${esc(p.category)}</td><td>${esc(p.creator_name || p.user_id)}</td><td>${mediaUrls.map(url => `<a href='${url}' target='_blank'>Media</a>`).join(', ')}</td>`;
       projectsTable.appendChild(tr);
     });
   }
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!userErr && users) {
       users.forEach(u => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${u.email || u.id}</td><td>${u.id}</td>`;
+        tr.innerHTML = `<td>${esc(u.email || u.id)}</td><td>${esc(u.id)}</td>`;
         usersTable.appendChild(tr);
       });
     } else {

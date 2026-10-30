@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const location = profile.location || '';
   const about = profile.about || '';
   if ((location && location.trim()) || (about && about.trim())) {
-    document.getElementById('profile-location').innerHTML = location ? `<span style='font-weight:700;'>Location:</span> <span style='color:#e75480;'>${location}</span>` : '';
+    document.getElementById('profile-location').innerHTML = location ? `<span style='font-weight:700;'>Location:</span> <span style='color:#e75480;'>${esc(location)}</span>` : '';
     document.getElementById('profile-about').textContent = about ? about : '';
     document.getElementById('profile-info-card').style.display = '';
     document.getElementById('profile-empty-card').style.display = 'none';
@@ -97,8 +97,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       li.innerHTML = `
         <img src="${(mediaUrls && mediaUrls[0]) ? mediaUrls[0] : 'assets/sample1.jpg'}" class="project-thumb" alt="Project Thumbnail">
         <div class="project-info">
-          <div class="project-title">${p.title}</div>
-          <div class="project-meta">${p.category || ''} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
+          <div class="project-title">${esc(p.title)}</div>
+          <div class="project-meta">${esc(p.category || '')} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
         </div>
       `;
       projectsList.appendChild(li);

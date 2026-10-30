@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const profileInfoCard = document.getElementById('profile-info-card');
     const profileEmptyCard = document.getElementById('profile-empty-card');
     if ((location && location.trim()) || (about && about.trim())) {
-      if (profileLocation) profileLocation.innerHTML = location ? `<span style='font-weight:700;'>Location:</span> <span style='color:#e75480;'>${location}</span>` : '';
+      if (profileLocation) profileLocation.innerHTML = location ? `<span style='font-weight:700;'>Location:</span> <span style='color:#e75480;'>${esc(location)}</span>` : '';
       if (profileAbout) profileAbout.textContent = about ? about : '';
       if (profileInfoCard) profileInfoCard.style.display = '';
       if (profileEmptyCard) profileEmptyCard.style.display = 'none';
@@ -310,8 +310,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         li.innerHTML = `
           <img src="${(mediaUrls && mediaUrls[0]) ? mediaUrls[0] : 'assets/sample1.jpg'}" class="project-thumb" alt="Project Thumbnail">
           <div class="project-info">
-            <div class="project-title">${p.title}</div>
-            <div class="project-meta">${p.category || ''} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
+            <div class="project-title">${esc(p.title)}</div>
+            <div class="project-meta">${esc(p.category || '')} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
           </div>
         `;
         projectsList.appendChild(li);
@@ -356,8 +356,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         li.innerHTML = `
           <img src="${(mediaUrls && mediaUrls[0]) ? mediaUrls[0] : 'assets/sample1.jpg'}" class="favorite-thumb" alt="Project Thumbnail">
           <div class="favorite-info">
-            <div class="favorite-title">${p.title}</div>
-            <div class="favorite-meta">${p.category || ''} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
+            <div class="favorite-title">${esc(p.title)}</div>
+            <div class="favorite-meta">${esc(p.category || '')} &middot; ${new Date(p.created_at).toLocaleDateString()}</div>
           </div>
         `;
         favoritesList.appendChild(li);

@@ -62,6 +62,7 @@
     <span id="copyright"></span>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/utils.js"></script>
   <script src="js/supabase.js"></script>
   <script>
     // Dynamic copyright year
@@ -135,12 +136,12 @@
       const isOwner = currentUser && project.user_id === currentUser.id;
       card.innerHTML = `
         ${carouselHtml}
-        <div class="project-title">${project.title}</div>
+        <div class="project-title">${esc(project.title)}</div>
         <div class="creator-detail">
           <img src="${creatorAvatar}" alt="Creator Avatar">
-          <span class="creator-name">${project.creator_name || 'Anonymous'}</span>
+          <span class="creator-name">${esc(project.creator_name || 'Anonymous')}</span>
         </div>
-        <p class="project-detail-desc">${project.description}</p>
+        <p class="project-detail-desc">${esc(project.description)}</p>
         <div class="project-detail-meta">
           <span class="likes" id="likes-count">❤️ ${project.likes_count || 0}</span>
           <span class="comments" id="comments-count">💬 ${project.comments_count || 0}</span>
@@ -419,10 +420,10 @@
             <div style="display:flex;align-items:center;gap:12px;">
               <a href="user.html?id=${c.user_id}" style="display:inline-block;"><img src="${avatar}" alt="avatar" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #f3d6e3;"></a>
               <div style="flex:1;">
-                <a href="user.html?id=${c.user_id}" style="font-weight:700;color:#e75480;font-size:1.08em;text-decoration:none;">${username}</a>
+                <a href="user.html?id=${c.user_id}" style="font-weight:700;color:#e75480;font-size:1.08em;text-decoration:none;">${esc(username)}</a>
                 <span class="comment-date" style="color:#b48a99;font-size:0.98em;margin-left:8px;">${displayTime}</span>
                 ${c.updated_at && c.updated_at !== c.created_at ? '<span class="comment-edited" style="color:#b48a99;font-size:0.95em;margin-left:6px;">(edited)</span>' : ''}
-                <div class="comment-content" style="margin:2px 0 0 0;color:#333;font-size:1.08em;word-break:break-word;">${c.content}</div>
+                <div class="comment-content" style="margin:2px 0 0 0;color:#333;font-size:1.08em;word-break:break-word;">${esc(c.content)}</div>
                 ${currentUser && c.user_id === currentUser.id ? `
                   <div class="comment-actions" style="margin-top:4px;">
                     <button class="edit-comment-btn" style="background:#f3d6e3;color:#e75480;">Edit</button>
@@ -444,7 +445,7 @@
             // Hide edit/delete buttons while editing
             li.querySelectorAll('.edit-comment-btn, .delete-comment-btn').forEach(b => b.style.display = 'none');
             // Replace content with input
-            contentSpan.innerHTML = `<input type='text' value="${originalContent}" class='edit-comment-input' style='width:60%;padding:4px 8px;border-radius:4px;border:1px solid #f3d6e3;'> <button class='save-edit-btn' style='background:#e75480;color:#fff;margin-left:6px;'>Save</button> <button class='cancel-edit-btn' style='background:#f3d6e3;color:#e75480;margin-left:4px;'>Cancel</button>`;
+            contentSpan.innerHTML = `<input type='text' value="${esc(originalContent)}" class='edit-comment-input' style='width:60%;padding:4px 8px;border-radius:4px;border:1px solid #f3d6e3;'> <button class='save-edit-btn' style='background:#e75480;color:#fff;margin-left:6px;'>Save</button> <button class='cancel-edit-btn' style='background:#f3d6e3;color:#e75480;margin-left:4px;'>Cancel</button>`;
             li.querySelector('.save-edit-btn').onclick = async () => {
               const newContent = li.querySelector('.edit-comment-input').value.trim();
               if (!newContent) return alert('Comment cannot be empty.');

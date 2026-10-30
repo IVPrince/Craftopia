@@ -229,12 +229,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         <a href="project.html?id=${project.id}" class="project-link" style="text-decoration:none;color:inherit;display:block;">
           ${carouselHtml}
           <div class="project-info">
-            <h3>${project.title}</h3>
+            <h3>${esc(project.title)}</h3>
             <div class="creator">
               <img src="${avatarUrl}" alt="Creator Avatar">
-              <span>${creator}</span>
+              <span>${esc(creator)}</span>
             </div>
-            <p>${project.description}</p>
+            <p>${esc(project.description)}</p>
             <div class="project-meta">
               <span class="likes">❤️ ${project.likes_count || 0}</span>
               <span class="comments">💬 ${project.comments_count || 0}</span>
